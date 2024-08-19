@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "user-subscription-webpart-client-side-solution",
+    "id": "f00b2f09-b389-494a-aaf1-14d9cf778743",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.18.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "user-subscription-webpart description"
+      },
+      "longDescription": {
+        "default": "user-subscription-webpart description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "user-subscription-webpart Feature",
+        "description": "The feature that activates elements of the user-subscription-webpart solution.",
+        "id": "b1902914-6510-4ce3-8876-5cad76396d1f",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/user-subscription-webpart.sppkg"
+  }
+}

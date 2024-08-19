@@ -1,0 +1,17 @@
+.postFormContainer{
+    margin: auto;
+    padding: 15px;
+    
+    &MainContainer{
+            display: flex;
+            flex-direction: column;       
+    }
+    &BottomContainer{            
+            display: flex;
+            justify-content: space-around;           
+            padding: 15px;             
+        
+    }
+
+
+}

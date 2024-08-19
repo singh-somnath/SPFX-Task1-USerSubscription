@@ -1,0 +1,26 @@
+@import '~@fluentui/react/dist/sass/References.scss';
+
+.managedMetadata{
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    justify-content: space-between;
+
+    & > label{
+        text-transform: capitalize;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    &ComboBox {       
+        border-radius: 10px;      
+        font-size: 11px;
+    }
+    
+    &Error{
+        color: red;
+        font-size: 10px;
+        font-weight: 300;
+        text-transform: capitalize;        
+    }
+}

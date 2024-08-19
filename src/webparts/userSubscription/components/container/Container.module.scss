@@ -1,0 +1,17 @@
+@import '~@fluentui/react/dist/sass/References.scss';
+
+.container{
+
+    @media (min-width: 550px) {
+        min-width: 500px;
+    }
+    margin: auto;
+    &Header{
+        background-color: $ms-color-themePrimary;
+        color:$ms-color-neutralPrimary;
+        padding: 10px;
+        display: block;
+        font-size: 20px;
+        font-weight: 600;
+    }
+}
