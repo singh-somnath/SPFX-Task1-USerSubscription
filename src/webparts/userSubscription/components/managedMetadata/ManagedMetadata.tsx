@@ -7,7 +7,7 @@ import { ModernTaxonomyPicker} from "@pnp/spfx-controls-react/lib";
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 
 import styles from './ManagedMetadata.module.scss';
-import { ITermInfo } from '@pnp/sp/taxonomy';
+
 
 interface IManagedMetadataType {
     control : any;
@@ -44,7 +44,7 @@ const ManagedMetadata = (props:IManagedMetadataType): JSX.Element  =>{
                 name={name}
                 rules={{required:isRequired}}
                 render = {({field : {onChange,value}})=>{
-                    {console.log("Current Metadata Value",value);}
+               
                     return  <ModernTaxonomyPicker 
                             allowMultipleSelections={isMultiSelect}
                             label=""

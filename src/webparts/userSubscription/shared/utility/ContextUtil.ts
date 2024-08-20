@@ -2,7 +2,6 @@ import { WebPartContext } from "@microsoft/sp-webpart-base";
 import {SPFI, spfi,SPFx as spSPFx } from "@pnp/sp";
 import {
   SPHttpClient,
-  SPHttpClientResponse,
   ISPHttpClientOptions
 } from '@microsoft/sp-http'; 
 
@@ -13,6 +12,7 @@ import "@pnp/sp/items/get-all";
 import "@pnp/sp/files";
 import "@pnp/sp/folders";
 import "@pnp/sp/site-users/web";
+import { IUserSubscriptionDetail } from "../../components/postForm/PostForm";
 
 export const spInstanceUtil = (_context : WebPartContext):SPFI =>{
     let _sp:SPFI;
@@ -25,12 +25,12 @@ export const spInstanceUtil = (_context : WebPartContext):SPFI =>{
    
 };
 
-export async function getItemUsingRenderListDataAsStream(itemId: number, context: WebPartContext): Promise<any> {
+export async function getSubscribeItemCurrentUser(context: WebPartContext): Promise<IUserSubscriptionDetail> {
         const options: ISPHttpClientOptions = {
             headers: {'odata-version':'3.0'},
             body: `{'query': {
                 '__metadata': {'type': 'SP.CamlQuery'},
-                'ViewXml': '<View><Query><Where><Eq><FieldRef Name="ID" /><Value Type="Counter">${itemId}</Value></Eq></Where></Query></View>'
+                'ViewXml': '<View><Query><Where><Eq><FieldRef Name="User" LookupId="TRUE" /><Value Type="Integer">${context.pageContext.legacyPageContext.userId}</Value></Eq></Where></Query></View>'
             }}`
         };
         //'<View><Query><Where><Eq><FieldRef Name='ID' /><Value Type='Number'>${itemId}</Value></Eq></Where></Query><ViewFields><FieldRef Name='Country' /></ViewFields></View>'
@@ -41,8 +41,9 @@ export async function getItemUsingRenderListDataAsStream(itemId: number, context
     try{
             const request = await context.spHttpClient.post(endpoint,SPHttpClient.configurations.v1,options);
             const result = await request.json();
+            
             console.log("Caml : " , result);
-            return result;
+            return result.value[0];
     }catch(error){
         console.log("Error ",error);
     }                                  

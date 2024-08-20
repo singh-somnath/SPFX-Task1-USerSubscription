@@ -13,7 +13,7 @@ import { ITermInfo } from "@pnp/sp/taxonomy";
 import { SPFI } from '@pnp/sp';
 
 
-interface IFormValues{
+export interface IFormValues{
     frequency:string[];
     country: ITermInfo[];
 }
@@ -67,7 +67,7 @@ export interface ITermInfo {
 }
 
 */
-const mapToTermInfo = (initialValue) => (
+const mapToTermInfo = (initialValue):ITermInfo => (
     {
     id: initialValue.TermGuid,
     labels: [{ 
@@ -91,17 +91,12 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
     const  spContext:SPFI  =  spInstanceUtil(data.currentContext) ;
     
 
-    const {handleSubmit,control,getValues,reset,formState:{errors,isSubmitting,isSubmitSuccessful,isSubmitted} } = useForm<IFormValues>({
+    const {handleSubmit,control,getValues,reset,formState:{errors,isSubmitting,isSubmitSuccessful} } = useForm<IFormValues>({
         defaultValues:{
             frequency:data.post?.Frequency || undefined,           
             country:data.post?.Country ? [mapToTermInfo(data.post.Country)] : []
         }
-    });
-
-    useEffect(()=>{
-        console.log(errors);
-        console.log("Post", data);
-    },[errors]);
+    });   
 
     useEffect(()=>{
         const currentOptions: IComboBoxOption[] = [          
@@ -118,9 +113,7 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
    useEffect(()=>{
         if(isSubmitSuccessful)
         { 
-            //console.log("IsSubmitted",isSubmitted);
-            //console.log("isSubmitting",isSubmitting);
-            //console.log("isSubmitSuccessful" , isSubmitSuccessful); 
+          
             reset({
                 frequency:undefined,
                 country: [] // Reset taxonomy picker field to empty array
@@ -131,17 +124,13 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
     
 
     const onFormSubmission = (postData:IFormValues):void=>{   
-        console.log("PostData", postData);
-        console.log("data", data);
-      
-        console.log(isSubmitSuccessful);
-        
+             
         if(!isSubmitSuccessful){
             
                 if(data.post && data.post.Id)
                 {
                     try{
-                        {console.log("Update Data")}
+                       
                         spContext.web.lists.getByTitle("UserSubscription").items.getById(data.post.Id).update({
                             Frequency: postData.frequency, // alloa single user
                             UserId:  data.currentContext.pageContext.legacyPageContext.userId,
@@ -173,7 +162,7 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
                 else
                 {
                     try{
-                        {console.log("New Data")}
+                        
                         spContext.web.lists.getByTitle("UserSubscription").items.add({
                             Frequency: postData.frequency, // alloa single user
                             UserId:  data.currentContext.pageContext.legacyPageContext.userId,
