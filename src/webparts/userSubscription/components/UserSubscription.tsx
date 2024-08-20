@@ -38,8 +38,8 @@ const UserSubscription:React.FC<IUserSubscriptionProps> = (props:IUserSubscripti
     return (
       <>
           <Button title="New Click Me" disabled={false} type="button" onClickHandle={()=>handleShowModal()} />        
-          <ModalDialog open={show}>
-            <Container headerTitle="Subscription">
+          <ModalDialog open={show} >
+            <Container>
               <PostForm closeModalHandle={()=>handleShowModal()} currentContext={props.currentContext} post={post}/>
             </Container>
           </ModalDialog>  
