@@ -20,6 +20,7 @@ const ModalDialog = (props:IModalDialog): JSX.Element  =>{
       title: 'Subscription',
       subText: 'Please enter subscription details',
     };
+    
     return(
         <div>
           <Dialog
