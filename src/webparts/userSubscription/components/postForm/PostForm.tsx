@@ -1,16 +1,14 @@
 import * as React from 'react';
-import {useForm} from "react-hook-form";
-import Button from '../button/Button';
-import PrimaryDropdown from '../dropdown/PrimaryDropdown';
-import ManagedMetadata from '../managedMetadata/ManagedMetadata';
 import styles  from './PostForm.module.scss';
-import {IComboBoxOption,MessageBar,MessageBarType} from '@fluentui/react';
+import {ComboBox, IComboBox, IComboBoxOption,MessageBar,MessageBarType, PrimaryButton} from '@fluentui/react';
 import { useState,useEffect } from 'react';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 import {spInstanceUtil}  from '../../shared/utility/ContextUtil';
 import { IItemAddResult } from '@pnp/sp/items/types';
-import { ITermInfo } from "@pnp/sp/taxonomy";
+import { ITermInfo as mapTermInfo } from "@pnp/sp/taxonomy";
+import { ITermInfo } from "@pnp/spfx-controls-react/node_modules/@pnp/sp/taxonomy/";
 import { SPFI } from '@pnp/sp';
+import { ModernTaxonomyPicker } from '@pnp/spfx-controls-react';
 
 
 export interface IFormValues{
@@ -67,7 +65,7 @@ export interface ITermInfo {
 }
 
 */
-const mapToTermInfo = (initialValue):ITermInfo => (
+const mapToTermInfo = (initialValue):mapTermInfo => (
     {
     id: initialValue.TermGuid,
     labels: [{ 
@@ -88,17 +86,22 @@ const mapToTermInfo = (initialValue):ITermInfo => (
 const PostForm = (data?:IPostType): JSX.Element  =>{
     const[status,setStatus] = useState<IStatusMessage>();
     const[options,setOptions] = useState<IComboBoxOption[]>([]);
-    const  spContext:SPFI  =  spInstanceUtil(data.currentContext) ;
-    
+    const[isSubmitSuccessful,setIsSubmitSuccessful] = useState(false);
+    const[isSubmitting,setIsSubmitting] = useState(false);
 
-    const {handleSubmit,control,getValues,reset,formState:{errors,isSubmitting,isSubmitSuccessful} } = useForm<IFormValues>({
-        defaultValues:{
-            frequency:data.post?.Frequency || undefined,           
-            country:data.post?.Country ? [mapToTermInfo(data.post.Country)] : []
-        }
-    });   
+    const [frequency, setFrequency] = useState<string[]>(data.post?.Frequency || undefined);
+    const [country, setcountry] = useState<mapTermInfo[]>(data.post?.Country ? [mapToTermInfo(data.post.Country)] : []);
+
+   
+
+    const[frequencyError,setFrequencyError] = useState(false);
+    const[countryError,setCountryError] = useState(false);
+
+    const  spContext:SPFI  =  spInstanceUtil(data.currentContext) ; 
 
     useEffect(()=>{
+        console.log(data);
+        console.log(frequency, "---",country);
         const currentOptions: IComboBoxOption[] = [          
             { key: 'Immediately', text: 'Immediately' },
             { key: 'Daily', text: 'Daily' },
@@ -110,33 +113,44 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
     },[])
 
     
-   useEffect(()=>{
-        if(isSubmitSuccessful)
-        { 
-          
-            reset({
-                frequency:undefined,
-                country: [] // Reset taxonomy picker field to empty array
-            });   
-        }
-    },[isSubmitSuccessful])
-    
+    const onChangeFrequency = ( event: React.FormEvent<IComboBox>,
+        option?: IComboBoxOption,
+      ):void =>{
+        setFrequencyError(false);
+        setFrequency([option?.key as string]);
+    }
+
+    const onTaxPickerChange = (terms ?: ITermInfo[]):void => {
+        setCountryError(false);
+        setcountry(terms as any);
+    }
+
     
 
-    const onFormSubmission = (postData:IFormValues):void=>{   
-             
+    const onFormSubmission = ():void=>{  
         if(!isSubmitSuccessful){
-            
+                setIsSubmitting(true);
+                if(frequency.length <= 0){
+                    setFrequencyError(true);
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                if(country.length <= 0){
+                    setCountryError(true);
+                    setIsSubmitting(false);
+                    return;
+                }               
                 if(data.post && data.post.Id)
                 {
                     try{
                        
                         spContext.web.lists.getByTitle("UserSubscription").items.getById(data.post.Id).update({
-                            Frequency: postData.frequency, // alloa single user
+                            Frequency: frequency[0], // alloa single user
                             UserId:  data.currentContext.pageContext.legacyPageContext.userId,
                             Country: { 
-                                Label:postData.country[0].labels[0].name, 
-                                TermGuid: postData.country[0].id, 
+                                Label:country[0].labels[0].name, 
+                                TermGuid: country[0].id, 
                                 WssId: '-1'
                             }})
                             .then((res:IItemAddResult)=>{
@@ -146,7 +160,9 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
                                     type : MessageBarType.success
                                 });      
                              }).then(()=>{
-                                data.closeModalHandle()
+                                data.closeModalHandle();
+                                setIsSubmitSuccessful(true);
+                                setIsSubmitting(false);
                              }).catch((error)=>{
                                 console.log(error);
                             })    
@@ -156,7 +172,8 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
                             message : "Error in data insert.",
                             status:true,
                             type : MessageBarType.error
-                        });                          
+                        });    
+                        setIsSubmitting(false);                      
                     }         
                 }  
                 else
@@ -164,11 +181,11 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
                     try{
                         
                         spContext.web.lists.getByTitle("UserSubscription").items.add({
-                            Frequency: postData.frequency, // alloa single user
+                            Frequency: frequency[0], // alloa single user
                             UserId:  data.currentContext.pageContext.legacyPageContext.userId,
                             Country: { 
-                                Label:postData.country[0].labels[0].name, 
-                                TermGuid: postData.country[0].id, 
+                                Label:country[0].labels[0].name, 
+                                TermGuid: country[0].id, 
                                 WssId: '-1'
                             }})
                             .then((res:IItemAddResult)=>{
@@ -179,6 +196,8 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
                               });      
                             }).then(()=>{
                                 data.closeModalHandle();
+                                setIsSubmitSuccessful(true);
+                                setIsSubmitting(false);
                             }).catch((error)=>{
                                 console.log(error);
                             })  
@@ -188,9 +207,11 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
                             message : "Error in data insert.",
                             status:true,
                             type : MessageBarType.error
-                        });                          
+                        });
+                        setIsSubmitting(false);                          
                     }    
                 }
+               
 
             
         }          
@@ -201,8 +222,7 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
     };
     
     return(           
-            <div>                
-                <form onSubmit={handleSubmit(onFormSubmission)}>                  
+            <>         
                     <div className={styles.postFormContainer}>  
                         {status &&    
                             <MessageBar 
@@ -213,38 +233,34 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
                             >{status.message}
                             </MessageBar> 
                         }
-                        <div className={styles.postFormContainerMainContainer}>                                
-                                  <PrimaryDropdown 
-                                    label="Frequency :"
-                                    name="frequency"
-                                    control={control}
-                                    ariaInvalid={errors.frequency ? true : false}
-                                    keys={getValues("frequency") ? getValues("frequency") : undefined}
-                                    isRequired={true}
-                                    optionsList={options ? options : []}
-                                    isMultiSelect = {false}
-                                  />   
-                                  {console.log("Get Value Country",getValues("country"))}
-                                  <ManagedMetadata
-                                    isMultiSelect={false}
-                                    control={control}
-                                    label="Country :"
-                                    name="country"
-                                    ariaInvalid={errors.country ? true : false}                                    
-                                    isRequired={true}
-                                    termsetNameOrID="a85cfca9-6a0e-4c23-bce4-6a5bb6d7ab02"
-                                    panelTitle="Select Term"                                    
-                                    currentContext={data.currentContext}                                  
-                                  />
+                        <div className={styles.postFormContainerMainContainer}>  
+                                <ComboBox 
+                                    label='Frequency :'                                  
+                                    options={options ? options : []}
+                                    multiSelect = {false}
+                                    selectedKey={frequency}
+                                    onChange= {onChangeFrequency} 
+                                /> 
+                                {frequencyError && <div className={styles.primaryDropdownError}>Frequency is required.</div>}                            
+                                <ModernTaxonomyPicker 
+                                        allowMultipleSelections={false}
+                                        label="Country :"
+                                        termSetId="a85cfca9-6a0e-4c23-bce4-6a5bb6d7ab02"
+                                        panelTitle="Select Term"             
+                                        context={data.currentContext as any}
+                                        onChange={onTaxPickerChange}
+                                        initialValues={country as any || []}
+                                        allowSelectingChildren={false}
+                                />
+                                {countryError && <div className={styles.primaryDropdownError}>Country is required.</div>} 
+                               
                         </div>                    
                         <div className={styles.postFormContainerBottomContainer}>
-                            <Button  type="Submit" disabled={isSubmitting} title={data.post ? "Update" : "Submit"} />   
-                            <Button  type="button" disabled={false} title={"Cancel"} onClickHandle={data.closeModalHandle}/>   
+                            <PrimaryButton  type="button"  disabled={isSubmitting} text={data.post ? "Update" : "Submit"} onClick={onFormSubmission}/>   
+                            <PrimaryButton  type="button" disabled={false} text={"Cancel"} onClick={data.closeModalHandle}/>   
                         </div>   
-                    </div>                              
-                </form>
-            </div>      
-       
+                    </div> 
+            </>
     );
 }
 

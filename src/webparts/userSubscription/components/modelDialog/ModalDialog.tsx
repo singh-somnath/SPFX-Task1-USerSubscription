@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {Dialog, DialogType} from '@fluentui/react';
-import {useId}  from '@fluentui/react-hooks';
 
 interface IModalDialog{
   children: React.ReactNode,
@@ -12,15 +11,13 @@ const ModalDialog = (props:IModalDialog): JSX.Element  =>{
         children,
         open           
     }=props;
-    
-    const id = useId();
-    
+
     const dialogContentProps = {
       type: DialogType.largeHeader,
       title: 'Subscription',
       subText: 'Please enter subscription details',
     };
-    
+
     return(
         <div>
           <Dialog
@@ -32,7 +29,7 @@ const ModalDialog = (props:IModalDialog): JSX.Element  =>{
                 main: {
                   selectors: {
                     ['@media (min-width: 480px)']: {
-                      minWidth: 550 
+                      minWidth: 550
                      
                     }
                   }
