@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styles  from './PostForm.module.scss';
-import {ComboBox, IComboBox, IComboBoxOption,MessageBar,MessageBarType, PrimaryButton} from '@fluentui/react';
+import {ComboBox, DialogFooter, IComboBox, IComboBoxOption,ILabelStyles,Label,MessageBar,MessageBarType, PrimaryButton, Stack} from '@fluentui/react';
 import { useState,useEffect } from 'react';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 import {spInstanceUtil}  from '../../shared/utility/ContextUtil';
@@ -17,7 +17,7 @@ export interface IFormValues{
 }
 export interface IUserSubscriptionDetail{
     Id?:number;
-    Frequency:string[];
+    Frequency:string;
     Country:ITermInfo[] ;
  
 }
@@ -34,37 +34,15 @@ interface IStatusMessage{
     status  :boolean;
     type : MessageBarType;
 }
-/*
-export interface ITermInfo {
-    childrenCount: number;
-    id: string;
-    labels: {
-        name: string;
-        isDefault: boolean;
-        languageTag: string;
-    }[];
-    createdDateTime: string;
-    customSortOrder?: ITermSortOrderInfo[];
-    lastModifiedDateTime: string;
-    descriptions: {
-        description: string;
-        languageTag: string;
-    }[];
-    properties?: ITaxonomyProperty[];
-    localProperties?: ITaxonomyLocalProperty[];
-    isDeprecated: boolean;
-    isAvailableForTagging: {
-        setId: string;
-        isAvailable: boolean;
-    }[];
-    topicRequested?: boolean;
-    parent?: ITermInfo;
-    set?: ITermSetInfo;
-    relations?: IRelationInfo[];
-    children?: ITermInfo[];
-}
+const labelStyle:ILabelStyles = {
+    root:{
+        color: 'red',
+        fontSize: '12px',
+        fontWeight: 500,
+        textTransform: 'capitalize'
+    }
+};
 
-*/
 const mapToTermInfo = (initialValue):mapTermInfo => (
     {
     id: initialValue.TermGuid,
@@ -89,7 +67,7 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
     const[isSubmitSuccessful,setIsSubmitSuccessful] = useState(false);
     const[isSubmitting,setIsSubmitting] = useState(false);
 
-    const [frequency, setFrequency] = useState<string[]>(data.post?.Frequency || undefined);
+    const [frequency, setFrequency] = useState<string>(data.post?.Frequency || null);
     const [country, setcountry] = useState<mapTermInfo[]>(data.post?.Country ? [mapToTermInfo(data.post.Country)] : []);
 
    
@@ -117,7 +95,7 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
         option?: IComboBoxOption,
       ):void =>{
         setFrequencyError(false);
-        setFrequency([option?.key as string]);
+        setFrequency(option?.key as string);
     }
 
     const onTaxPickerChange = (terms ?: ITermInfo[]):void => {
@@ -140,13 +118,14 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
                     setCountryError(true);
                     setIsSubmitting(false);
                     return;
-                }               
+                }   
+                {console.log("frequency",frequency)}      
                 if(data.post && data.post.Id)
                 {
                     try{
                        
                         spContext.web.lists.getByTitle("UserSubscription").items.getById(data.post.Id).update({
-                            Frequency: frequency[0], // alloa single user
+                            Frequency: frequency, // alloa single user
                             UserId:  data.currentContext.pageContext.legacyPageContext.userId,
                             Country: { 
                                 Label:country[0].labels[0].name, 
@@ -181,7 +160,7 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
                     try{
                         
                         spContext.web.lists.getByTitle("UserSubscription").items.add({
-                            Frequency: frequency[0], // alloa single user
+                            Frequency: frequency, // alloa single user
                             UserId:  data.currentContext.pageContext.legacyPageContext.userId,
                             Country: { 
                                 Label:country[0].labels[0].name, 
@@ -221,46 +200,44 @@ const PostForm = (data?:IPostType): JSX.Element  =>{
         setStatus(undefined);       
     };
     
-    return(           
-            <>         
-                    <div className={styles.postFormContainer}>  
-                        {status &&    
-                            <MessageBar 
-                                messageBarType={status.type} 
-                                onDismiss={resetMessageBar} 
-                                dismissButtonAriaLabel='close' 
-                                isMultiline={false} 
-                            >{status.message}
-                            </MessageBar> 
-                        }
-                        <div className={styles.postFormContainerMainContainer}>  
-                                <ComboBox 
-                                    label='Frequency :'                                  
-                                    options={options ? options : []}
-                                    multiSelect = {false}
-                                    selectedKey={frequency}
-                                    onChange= {onChangeFrequency} 
-                                /> 
-                                {frequencyError && <div className={styles.primaryDropdownError}>Frequency is required.</div>}                            
-                                <ModernTaxonomyPicker 
-                                        allowMultipleSelections={false}
-                                        label="Country :"
-                                        termSetId="a85cfca9-6a0e-4c23-bce4-6a5bb6d7ab02"
-                                        panelTitle="Select Term"             
-                                        context={data.currentContext as any}
-                                        onChange={onTaxPickerChange}
-                                        initialValues={country as any || []}
-                                        allowSelectingChildren={false}
-                                />
-                                {countryError && <div className={styles.primaryDropdownError}>Country is required.</div>} 
-                               
-                        </div>                    
-                        <div className={styles.postFormContainerBottomContainer}>
-                            <PrimaryButton  type="button"  disabled={isSubmitting} text={data.post ? "Update" : "Submit"} onClick={onFormSubmission}/>   
-                            <PrimaryButton  type="button" disabled={false} text={"Cancel"} onClick={data.closeModalHandle}/>   
-                        </div>   
-                    </div> 
-            </>
+    return(          
+            <Stack horizontal={false} tokens={{ childrenGap: 5 }} styles={{ root: { width: '100%' } }}>
+            {status &&    
+                <MessageBar 
+                    messageBarType={status.type} 
+                    onDismiss={resetMessageBar} 
+                    dismissButtonAriaLabel='close' 
+                    isMultiline={false} 
+                >{status.message}
+                </MessageBar> 
+            }
+            
+                    <ComboBox 
+                        label='Frequency :'                                  
+                        options={options ? options : []}
+                        multiSelect = {false}
+                        selectedKey={frequency}
+                        onChange= {onChangeFrequency} 
+                    /> 
+                    {frequencyError && <div className={styles.primaryDropdownError}>Frequency is required.</div>}                            
+                    <ModernTaxonomyPicker 
+                            allowMultipleSelections={false}
+                            label="Country :"
+                            termSetId="a85cfca9-6a0e-4c23-bce4-6a5bb6d7ab02"
+                            panelTitle="Select Term"             
+                            context={data.currentContext as any}
+                            onChange={onTaxPickerChange}
+                            initialValues={country as any || []}
+                            allowSelectingChildren={false}
+                    />
+                    {countryError && <Label styles={labelStyle}>Country is required.</Label>} 
+                    
+                                
+            <DialogFooter>
+                <PrimaryButton  type="button"  disabled={isSubmitting} text={data.post ? "Update" : "Submit"} onClick={onFormSubmission}/>   
+                <PrimaryButton  type="button" disabled={false} text={"Cancel"} onClick={data.closeModalHandle}/>   
+            </DialogFooter>   
+           </Stack> 
     );
 }
 
